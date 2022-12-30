@@ -1,7 +1,7 @@
 import argparse
-import json
 import re
 import sys
+import fileio
 
 #Replace tokens in a document with values from a JSON formatted config
 class TokenReplacer:
@@ -13,7 +13,7 @@ class TokenReplacer:
         self.config = config
         self.all_good = True
 
-    # Lookup hierarchical keys in config c, return value
+    # Lookup hierarchical keys in config c, return corresponding value
     # throws KeyError if key not found
     # throws ValueError if terminal value is not a string
     def __lookup(self, c, lat):
@@ -48,25 +48,6 @@ class TokenReplacer:
                         lambda matchobj: self.__lookup_match(matchobj),
                         str)
 
-#Read in input file using passed in read_file_contents function that takes a TextIOWrapper variable
-def read_file(file_name, read_file_contents):
-    try:
-        with open(file_name, 'r') as reader:
-            try:
-                return read_file_contents(reader)
-            except Exception as e:
-                sys.stderr.write(f"Error reading {file_name}: {e.args[0]}\n")
-                raise e;
-    except Exception as e:
-        sys.stderr.write(f"Error opening {file_name}: {e.strerror}\n")
-        raise e;
-
-def read_json_file(file_name):
-    return read_file(file_name, lambda reader: json.load(reader))
-
-def read_text_file(file_name):
-    return read_file(file_name, lambda reader: reader.read())
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Preprocess a text file and apply substitutions for all tokens.'
@@ -77,8 +58,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        token_replacer = TokenReplacer(read_json_file(args.config))
-        input_str = read_text_file(args.input)
+        token_replacer = TokenReplacer(fileio.read_json_file(args.config))
+        input_str = fileio.read_text_file(args.input)
     except Exception as e:
         sys.exit(f"Error during initialization: <${str(e)}>.")
 
