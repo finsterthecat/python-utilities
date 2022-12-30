@@ -1,0 +1,3 @@
+${creature.name} was a ${creature.animal}.
+${creature.name} may have had ${creature.defining_attribute}
+${creature.name } ${  creature.assertion }

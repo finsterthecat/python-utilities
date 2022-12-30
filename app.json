@@ -1,0 +1,15 @@
+{
+    "creature":
+        {"name": "Fuzzy Wuzzy",
+            "animal": "${global.mammaloftheday}",
+            "defining_attribute": "no ${global.bodycover}",
+            "assertion": "wasn't ${global.hair_characteristic}, was he?"
+        },
+    "global":
+        {
+            "mammaloftheday": "bear",
+            "bodycover": "${global.hairorfur}",
+            "hairorfur": "hair",
+            "hair_characteristic": "fuzzy"
+        }
+}
