@@ -2,8 +2,9 @@ import argparse
 import re
 import sys
 import fileio
+import fileinput
 
-#Replace tokens in a document with values from a JSON formatted config
+#Replace tokens found in input with values from a JSON formatted config
 class TokenReplacer:
 
     # Match ${aaa.bbb.ccc...} tokens, returning aaa.bbb.ccc... as match group 1
@@ -52,18 +53,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Preprocess a text file and apply substitutions for all tokens.'
         ' Send updated text to sysout.')
-    parser.add_argument('input', help='the input file')
+    parser.add_argument('input', help='the input file(s), if empty, stdin is used', nargs='*')
     parser.add_argument('--config', help='the config file [app.json]',
         default='app.json')
     args = parser.parse_args()
 
     try:
         token_replacer = TokenReplacer(fileio.read_json_file(args.config))
-        input_str = fileio.read_text_file(args.input)
     except Exception as e:
         sys.exit(f"Error during initialization: <${str(e)}>.")
 
-    print(token_replacer.replace_tokens(input_str))
+    try:
+        for line in fileinput.input(files=args.input, encoding="utf-8"):
+            print(token_replacer.replace_tokens(line), end="")
+    except Exception as e:
+        sys.exit(f"{e.strerror}: {e.filename}")
 
     #Exit with error if not all_good
     if not token_replacer.all_good:
