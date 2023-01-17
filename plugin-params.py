@@ -1,3 +1,5 @@
+#! /usr/local/bin/python3
+
 import argparse
 import re
 import sys
@@ -12,7 +14,7 @@ class TokenReplacer:
 
     def __init__(self, config):
         self.config = config
-        self.all_good = True
+        self.bad_token_count = 0
 
     # Lookup hierarchical keys in config c, return corresponding value
     # throws KeyError if key not found
@@ -31,11 +33,13 @@ class TokenReplacer:
         return self.__lookup(c[car], lat)
 
     # Called for each match by re.sub(). Return corresponding config value for matched token.
+    # Count cases where the token is not found.
+    # Client can check the count to determine whether all tokens found
     def __lookup_match(self, matchobj):
         try:
             return self.__lookup(self.config, matchobj.group(1).strip().split('.'))
         except (KeyError, ValueError) as e:
-            self.all_good = False
+            self.bad_token_count += 1
             bad_token = '${' + matchobj.group(1) + '}'
             sys.stderr.write(
                 f"Error: Token {bad_token} is not found in config\n" if isinstance(e, KeyError)
@@ -69,6 +73,7 @@ if __name__ == "__main__":
     except Exception as e:
         sys.exit(f"{e.strerror}: {e.filename}")
 
-    #Exit with error if not all_good
-    if not token_replacer.all_good:
-        sys.exit("Error(s) detected.")
+    #Exit with error if one or more bad tokens
+    if token_replacer.bad_token_count > 0:
+        sys.exit(f"{token_replacer.bad_token_count} token error" +
+            ("s" if token_replacer.bad_token_count > 1 else "") )
