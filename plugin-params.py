@@ -14,6 +14,7 @@ class TokenReplacer:
 
     def __init__(self, config):
         self.config = config
+        self.token_count = 0
         self.bad_token_count = 0
 
     # Lookup hierarchical keys in config c, return corresponding value
@@ -36,6 +37,7 @@ class TokenReplacer:
     # Count cases where the token is not found.
     # Client can check the count to determine whether all tokens found
     def __lookup_match(self, matchobj):
+        self.token_count += 1
         try:
             return self.__lookup(self.config, matchobj.group(1).strip().split('.'))
         except (KeyError, ValueError) as e:
@@ -53,10 +55,18 @@ class TokenReplacer:
                         lambda matchobj: self.__lookup_match(matchobj),
                         str)
 
+    # Have all the tokens encountered been valid?
+    def is_all_good(self):
+        return self.bad_token_count == 0
+
+    # Reset the bad token count to zero
+    def reset(self):
+        self.bad_token_count = 0
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Preprocess a text file and apply substitutions for all tokens.'
-        ' Send updated text to sysout.')
+        ' Send updated text to stdout.')
     parser.add_argument('input', help='the input file(s), if empty, stdin is used', nargs='*')
     parser.add_argument('--config', help='the config file [app.json]',
         default='app.json')
@@ -73,7 +83,7 @@ if __name__ == "__main__":
     except Exception as e:
         sys.exit(f"{e.strerror}: {e.filename}")
 
-    #Exit with error if one or more bad tokens
-    if token_replacer.bad_token_count > 0:
+    #Exit with error if errors detected by token_replacer
+    if not token_replacer.is_all_good:
         sys.exit(f"{token_replacer.bad_token_count} token error" +
             ("s" if token_replacer.bad_token_count > 1 else "") )
