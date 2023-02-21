@@ -10,28 +10,55 @@ import fileinput
 class TokenReplacer:
 
     # Match ${aaa.bbb.ccc...} tokens, returning aaa.bbb.ccc... as match group 1
-    __token_re = '\$\{([^\}]*)\}'
+    __token_re = '\$\{([^\}]*)\}(\.([a-z]+))?'
+    __xform_funcs = ['capitalize', 'title', 'upper', 'lower']
 
     def __init__(self, config):
         self.config = config
         self.token_count = 0
         self.bad_token_count = 0
 
+    def __xform(self, c, xform_func):
+        match xform_func:
+            case None:
+                return c
+            case 'capitalize':
+                return c.capitalize()
+            case 'title':
+                return c.title()
+            case 'upper':
+                return c.upper()
+            case 'lower':
+                return c.lower()
+            case default:
+                return c
+    
     # Lookup hierarchical keys in config c, return corresponding value
     # throws KeyError if key not found
     # throws ValueError if terminal value is not a string
-    def __lookup(self, c, lat):
+    def __lookup(self, c, lat, xform_func):
         # If no more segments in key then this must be the terminal entry and so should be a string
         # Support replacement of embedded tokens in the terminal value by calling replace_tokens!
         if not lat:
             if not isinstance(c, str):
                 raise ValueError
-            return self.replace_tokens(c)
+            return self.__xform(self.replace_tokens(c), xform_func)
         
         # More segments so look up the next one...
         car = lat.pop(0)
         # c[car] throws a KeyError if car is not found
-        return self.__lookup(c[car], lat)
+        return self.__lookup(c[car], lat, xform_func)
+
+    # Error message for passed in exception e
+    def __error_msg(self, e, bad_token):
+        if isinstance(e, KeyError):
+            return f"Error: Token {bad_token} is not found in config\n"
+        elif isinstance(e, ValueError):
+            return f"Error: Token {bad_token} is not a terminal string in the config\n"
+        elif isinstance(e, AttributeError):
+            return f"Error: Token {bad_token} contains an unrecognized transformation function"
+        else:
+            return ""
 
     # Called for each match by re.sub(). Return corresponding config value for matched token.
     # Count cases where the token is not found.
@@ -39,14 +66,16 @@ class TokenReplacer:
     def __lookup_match(self, matchobj):
         self.token_count += 1
         try:
-            return self.__lookup(self.config, matchobj.group(1).strip().split('.'))
-        except (KeyError, ValueError) as e:
+            lookup_lat = matchobj.group(1).strip().split('.')
+            xform_func = matchobj.group(3) if len(matchobj.groups()) > 2 else None
+            if xform_func != None and not xform_func in self.__xform_funcs:
+                sys.stderr.write(f"{xform_func} is not a valid transformation function")
+                raise AttributeError
+            return self.__lookup(self.config, lookup_lat, xform_func)
+        except (KeyError, ValueError, AttributeError) as e:
             self.bad_token_count += 1
             bad_token = '${' + matchobj.group(1) + '}'
-            sys.stderr.write(
-                f"Error: Token {bad_token} is not found in config\n" if isinstance(e, KeyError)
-                        else f"Error: Token {bad_token} is not a terminal string in the config\n"
-                        )
+            sys.stderr.write(self.__error_msg(e, bad_token))
             return bad_token
 
     # Replace tokens with looked up values from config

@@ -10,7 +10,7 @@ That's all for now. Stay tuned for more utilities!
 
 ### Usage
 
-```bash
+```text
 usage: plugin-params.py [-h] [--config CONFIG] [input ...]
 
 Preprocess a text file and apply substitutions for all tokens. Send updated text to stdout.
@@ -59,3 +59,20 @@ Fuzzy Wuzzy was a bear
 ```
 
 Notice that the processing supports recursive matching of tokens by looking up tokens in the matched strings.
+
+### Transformation functions
+
+*plugin-params* now supports the following transformation functions:
+
+* **title** will capitalize each word in the string
+* **capitalize** will capitalize the first word and lower case the remaining words
+* **upper** will upper case the string
+* **lower** will lower case the string
+
+To apply the transform to the token simply append a period followed by the transform name to the token. For example:
+
+```
+${create.name}.upper
+```
+
+will return **FUZZY WUZZY**

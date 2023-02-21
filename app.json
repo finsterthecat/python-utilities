@@ -7,7 +7,7 @@
         },
     "global":
         {
-            "title": "A ${creature.animal} Named ${creature.name}",
+            "title": "A ${creature.animal}.title Named ${creature.name}",
             "mammaloftheday": "bear",
             "bodycover": "${global.hairorfur}",
             "hairorfur": "hair",
