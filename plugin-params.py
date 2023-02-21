@@ -56,9 +56,9 @@ class TokenReplacer:
         elif isinstance(e, ValueError):
             return f"Error: Token {bad_token} is not a terminal string in the config\n"
         elif isinstance(e, AttributeError):
-            return f"Error: Token {bad_token} contains an unrecognized transformation function"
+            return f"Error: Token {bad_token} contains an unrecognized transformation function\n"
         else:
-            return ""
+            return f"Error: Unexpected system error\n"
 
     # Called for each match by re.sub(). Return corresponding config value for matched token.
     # Count cases where the token is not found.
@@ -69,14 +69,13 @@ class TokenReplacer:
             lookup_lat = matchobj.group(1).strip().split('.')
             xform_func = matchobj.group(3) if len(matchobj.groups()) > 2 else None
             if xform_func != None and not xform_func in self.__xform_funcs:
-                sys.stderr.write(f"{xform_func} is not a valid transformation function")
+                sys.stderr.write(f"{xform_func} is not a valid transformation function\n")
                 raise AttributeError
             return self.__lookup(self.config, lookup_lat, xform_func)
         except (KeyError, ValueError, AttributeError) as e:
             self.bad_token_count += 1
-            bad_token = '${' + matchobj.group(1) + '}'
-            sys.stderr.write(self.__error_msg(e, bad_token))
-            return bad_token
+            sys.stderr.write(self.__error_msg(e, matchobj.group(0)))
+            return matchobj.group(0)
 
     # Replace tokens with looked up values from config
     def replace_tokens(self, str):

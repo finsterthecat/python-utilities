@@ -1,5 +1,5 @@
 # ${global.title}
 
-${creature.name} was a ${creature.animal}.
+${creature.name} was a ${creature.animal}
 ${creature.name} had ${creature.defining_attribute}.
 ${creature.name } ${  creature.assertion }

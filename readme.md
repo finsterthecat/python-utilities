@@ -71,8 +71,12 @@ Notice that the processing supports recursive matching of tokens by looking up t
 
 To apply the transform to the token simply append a period followed by the transform name to the token. For example:
 
-```
-${create.name}.upper
+```text
+${creature.name}.upper was a ${creature.animal}.title
 ```
 
-will return **FUZZY WUZZY**
+will return
+
+```text
+FUZZY WUZZY was a Bear
+```
