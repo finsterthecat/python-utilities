@@ -10,8 +10,8 @@ import fileinput
 class TokenReplacer:
 
     # Match ${aaa.bbb.ccc...} tokens, returning aaa.bbb.ccc... as match group 1
-    __token_re = '\$\{([^\}]*)\}(\.([a-z]+))?'
-    __xform_funcs = ['capitalize', 'title', 'upper', 'lower']
+    # Also matches an optional transform function appended to the token as match group 3
+    __TOKEN_RE = '\$\{([^\}]*)\}(\.([a-z]+))?'
 
     def __init__(self, config):
         self.config = config
@@ -19,23 +19,22 @@ class TokenReplacer:
         self.bad_token_count = 0
 
     def __xform(self, c, xform_func):
-        match xform_func:
-            case None:
-                return c
-            case 'capitalize':
-                return c.capitalize()
-            case 'title':
-                return c.title()
-            case 'upper':
-                return c.upper()
-            case 'lower':
-                return c.lower()
-            case default:
-                return c
+        funcs = {
+            None: lambda c: c,
+            'capitalize': lambda c: c.capitalize(),
+            'title': lambda c: c.title(),
+            'upper': lambda c: c.upper(),
+            'lower': lambda c: c.lower()
+        }
+        try:
+            return funcs[xform_func](c);
+        except KeyError as e:
+            raise AttributeError
     
     # Lookup hierarchical keys in config c, return corresponding value
     # throws KeyError if key not found
     # throws ValueError if terminal value is not a string
+    # throws AttributeError if xform_func, if present, is not found
     def __lookup(self, c, lat, xform_func):
         # If no more segments in key then this must be the terminal entry and so should be a string
         # Support replacement of embedded tokens in the terminal value by calling replace_tokens!
@@ -68,18 +67,16 @@ class TokenReplacer:
         try:
             lookup_lat = matchobj.group(1).strip().split('.')
             xform_func = matchobj.group(3) if len(matchobj.groups()) > 2 else None
-            if xform_func != None and not xform_func in self.__xform_funcs:
-                sys.stderr.write(f"{xform_func} is not a valid transformation function\n")
-                raise AttributeError
             return self.__lookup(self.config, lookup_lat, xform_func)
         except (KeyError, ValueError, AttributeError) as e:
             self.bad_token_count += 1
             sys.stderr.write(self.__error_msg(e, matchobj.group(0)))
+            # Keep the token asis if error(s) detected
             return matchobj.group(0)
 
     # Replace tokens with looked up values from config
     def replace_tokens(self, str):
-        return re.sub(self.__token_re,
+        return re.sub(self.__TOKEN_RE,
                         lambda matchobj: self.__lookup_match(matchobj),
                         str)
 
