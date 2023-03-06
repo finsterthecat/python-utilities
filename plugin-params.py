@@ -29,7 +29,7 @@ class TokenReplacer:
         try:
             return funcs[xform_func](c);
         except KeyError as e:
-            raise AttributeError
+            raise AttributeError(f"Unrecognized transformation function: {xform_func}")
     
     # Lookup hierarchical keys in config c, return corresponding value
     # throws KeyError if key not found
@@ -40,24 +40,16 @@ class TokenReplacer:
         # Support replacement of embedded tokens in the terminal value by calling replace_tokens!
         if not lat:
             if not isinstance(c, str):
-                raise ValueError
+                raise ValueError(f"Key does not equate to a string in the config")
             return self.__xform(self.replace_tokens(c), xform_func)
         
         # More segments so look up the next one...
         car = lat.pop(0)
         # c[car] throws a KeyError if car is not found
-        return self.__lookup(c[car], lat, xform_func)
-
-    # Error message for passed in exception e
-    def __error_msg(self, e, bad_token):
-        if isinstance(e, KeyError):
-            return f"Error: Token {bad_token} is not found in config\n"
-        elif isinstance(e, ValueError):
-            return f"Error: Token {bad_token} is not a terminal string in the config\n"
-        elif isinstance(e, AttributeError):
-            return f"Error: Token {bad_token} contains an unrecognized transformation function\n"
-        else:
-            return f"Error: Unexpected system error\n"
+        try:
+            return self.__lookup(c[car], lat, xform_func)
+        except KeyError as e:
+            raise KeyError("Key is not found in config")
 
     # Called for each match by re.sub(). Return corresponding config value for matched token.
     # Count cases where the token is not found.
@@ -70,7 +62,7 @@ class TokenReplacer:
             return self.__lookup(self.config, lookup_lat, xform_func)
         except (KeyError, ValueError, AttributeError) as e:
             self.bad_token_count += 1
-            sys.stderr.write(self.__error_msg(e, matchobj.group(0)))
+            sys.stderr.write(f"Error: Bad token \"{matchobj.group(0)}\". {e.args[0]}\n")
             # Keep the token asis if error(s) detected
             return matchobj.group(0)
 
