@@ -17,6 +17,7 @@ class TokenReplacer:
         self.config = config
         self.token_count = 0
         self.bad_token_count = 0
+        self.line_num = 0
 
     def __xform(self, c, xform_func):
         funcs = {
@@ -41,7 +42,7 @@ class TokenReplacer:
         if not lat:
             if not isinstance(c, str):
                 raise ValueError(f"Key does not equate to a string in the config")
-            return self.__xform(self.replace_tokens(c), xform_func)
+            return self.__xform(self.__replace_tokens(c), xform_func)
         
         # More segments so look up the next one...
         car = lat.pop(0)
@@ -62,15 +63,27 @@ class TokenReplacer:
             return self.__lookup(self.config, lookup_lat, xform_func)
         except (KeyError, ValueError, AttributeError) as e:
             self.bad_token_count += 1
-            sys.stderr.write(f"Error: Bad token \"{matchobj.group(0)}\". {e.args[0]}\n")
+            sys.stderr.write(f"Error on line {self.line_num}: Bad token \"{matchobj.group(0)}\". {e.args[0]}\n")
             # Keep the token asis if error(s) detected
             return matchobj.group(0)
 
     # Replace tokens with looked up values from config
-    def replace_tokens(self, str):
+    def __replace_tokens(self, str):
         return re.sub(self.__TOKEN_RE,
                         lambda matchobj: self.__lookup_match(matchobj),
                         str)
+
+    def process_line(self, str):
+        self.line_num += 1
+        return self.__replace_tokens(str)
+
+    # Process all lines for all files, outputting the results using lambda output_func, default prints to stdout
+    def process_files(self, files, output_func = lambda line: print(line, end="")):
+        try:
+            for line in fileinput.input(files=files, encoding="utf-8"):
+                output_func(self.process_line(line))
+        except Exception as e:
+            sys.exit(f"{e.strerror}: {e.filename}")
 
     # Have all the tokens encountered been valid?
     def is_all_good(self):
@@ -94,11 +107,7 @@ if __name__ == "__main__":
     except Exception as e:
         sys.exit(f"Error during initialization: <${str(e)}>.")
 
-    try:
-        for line in fileinput.input(files=args.input, encoding="utf-8"):
-            print(token_replacer.replace_tokens(line), end="")
-    except Exception as e:
-        sys.exit(f"{e.strerror}: {e.filename}")
+    token_replacer.process_files(args.input)
 
     #Exit with error if errors detected by token_replacer
     if not token_replacer.is_all_good:
