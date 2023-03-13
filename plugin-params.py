@@ -110,6 +110,6 @@ if __name__ == "__main__":
     token_replacer.process_files(args.input)
 
     #Exit with error if errors detected by token_replacer
-    if not token_replacer.is_all_good:
-        sys.exit(f"{token_replacer.bad_token_count} token error" +
-            ("s" if token_replacer.bad_token_count > 1 else "") )
+    if not token_replacer.is_all_good():
+        sys.exit(f"Error: {token_replacer.bad_token_count} token error" +
+            ("s" if token_replacer.bad_token_count > 1 else "") + " found in input and/or config")
