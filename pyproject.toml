@@ -1,0 +1,12 @@
+[project]
+author = "Tony Brouwer"
+name = "mypackagefromtoml"
+url = "https://my-arb-url"
+version = "0.0.11"
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "wheel"]
+
+[project.scripts]
+my-application = "mypackage.mymodule:my_function"

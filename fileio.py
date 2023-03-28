@@ -1,6 +1,7 @@
 #Read in input file using passed in read_file_contents function that takes a TextIOWrapper variable
 import sys
 import json
+import csv
 
 def read_file(file_name, file_content_reader):
     try:
@@ -19,3 +20,9 @@ def read_json_file(file_name):
 
 def read_text_file(file_name):
     return read_file(file_name, lambda reader: reader.read())
+
+def read_csv_file(file_name):
+    return read_file(file_name, lambda reader: list(csv.DictReader(reader)))
+
+def just_give_me_the_reader(file_name):
+    return read_file(file_name, lambda reader: reader)
