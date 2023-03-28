@@ -5,7 +5,6 @@ import re
 import sys
 import fileio
 import csv
-import os
 
 parser = argparse.ArgumentParser(
     description='Preprocess a text file and apply substitutions for all tokens.'
@@ -15,8 +14,6 @@ parser.add_argument("--filter", nargs="*", type=str, default=[])
 args = parser.parse_args()
 
 rows = fileio.read_csv_file(args.input)
-
-output = list()
 
 ALL = "(Equity)|(Diversity)|(Inclusion)|(Anti-Racism)|(Indigenous)|(Equality)|(Rights)|(Gender)"
 
@@ -31,15 +28,14 @@ csv_columns = "Sector,Last Name,First Name,Salary,Benefits,Employer,Job Title,Ye
 
 writer = csv.DictWriter(sys.stdout, fieldnames=csv_columns)
 
+writer.writeheader()
+
 count = 0
 total = 0.0
 for row in rows:
     if re.search(filter, row['Job Title'], re.I):
         count += 1
         total += float(row["Salary"])
-        print(row["Sector"] + ":" + row["Job Title"] + ":" + row["Employer"]
-              + ":" + row["Last Name"] + "," + row["First Name"] + ":"
-              + format(float(row["Salary"]), '9,.2f'))
-        output.append(row)
+        writer.writerow(row)
 
-sys.stderr.write(f"{count} matches. Total is {total:9,.2f}. Average {(total/count):9,.2f}")
+sys.stderr.write(f"{count} matches. Total is {total:9,.2f}. Average {(total/count):9,.2f}\n")
