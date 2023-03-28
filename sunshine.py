@@ -7,10 +7,10 @@ import fileio
 import csv
 
 parser = argparse.ArgumentParser(
-    description='Preprocess a text file and apply substitutions for all tokens.'
-    ' Send updated text to stdout.')
-parser.add_argument('input', help='the input file(s), if empty, stdin is used')
-parser.add_argument("--filter", nargs="*", type=str, default=[])
+    description='Find all sunshine list employees whose job title matches filtered key words.'
+    ' Send matched records to stdout, which you can redirect to a file.')
+parser.add_argument('input', help='the sunshine csv file')
+parser.add_argument("--filter", nargs="*", type=str, default=[], help='list of keywords to match in Job Title column')
 args = parser.parse_args()
 
 rows = fileio.read_csv_file(args.input)
