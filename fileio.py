@@ -5,7 +5,7 @@ import csv
 
 def read_file(file_name, file_content_reader):
     try:
-        with open(file_name, 'r') as reader:
+        with open(file_name, 'r', encoding='utf-8-sig') as reader:
             try:
                 return file_content_reader(reader)
             except Exception as e:
