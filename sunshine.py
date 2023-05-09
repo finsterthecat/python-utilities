@@ -17,8 +17,9 @@ args = parser.parse_args()
 
 rows = fileio.read_csv_file(args.input)
 
-ALL = "(Equity)|(Diversity)|(Inclusion)|(Racism)|(Equality)|(Rights)|(Gender)"
+ALL = "(Equity)|(Diversity)|(Inclusion)|(Racism)|(Equality)|(Rights)|(Gender)|(Oppression)"
 
+# Include all jobs that match regex
 if args.regex != None:
     filter = args.regex
 elif args.filter == []:
@@ -26,9 +27,14 @@ elif args.filter == []:
 else:
     filter = "(" + ")|(".join(args.filter) + ")"
 
-sys.stderr.write(f"file is {args.input}. Filter: {filter}\n")
+# Exclude all jobs that match xregex
+xfilter = args.xregex
+
+sys.stderr.write(f"file is {args.input}. Filter: {filter}. Exclude filter {xfilter}.\n")
 
 csv_columns = "Sector,Last Name,First Name,Salary,Benefits,Employer,Job Title,Year".split(",")
+csv_columns += args.filter
+filtercols = {key: None for key in args.filter}
 
 writer = csv.DictWriter(sys.stdout, fieldnames=csv_columns)
 
@@ -37,10 +43,18 @@ writer.writeheader()
 count = 0
 total = 0.0
 for row in rows:
-    if re.search(filter, row['Job Title'], re.I):
+    if re.search(filter, row['Job Title'], re.I) and \
+            (xfilter == None or not re.search(xfilter, row['Job Title'], re.I)):
+        out_row = row
+        out_row.update(filtercols)
+
         count += 1
         total += float(row["Salary"])
-        writer.writerow(row)
+        for f in args.filter:
+            if re.search(f, row['Job Title'], re.I):
+                out_row[f] = 'x'
+        
+        writer.writerow(out_row)
 
 sys.stderr.write(f"{count} matches. Total is {total:9,.2f}.")
 if count > 0:

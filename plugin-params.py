@@ -19,6 +19,8 @@ class TokenReplacer:
         self.bad_token_count = 0
         self.line_num = 0
 
+    # Apply the named transform to string c.
+    # Throw AttributeError if unrecognized transform
     def __xform(self, c, xform_func):
         funcs = {
             None: lambda c: c,
