@@ -1,5 +1,5 @@
-# ${global.title} ${global}
+# ${global.title}
 
-${creature.name} was a ${creature.animal}.blah
-${creature.namex} had ${creature.defining_attribute}.
-${creature.name } ${  creature.assertion }
+${creature.nameX} was a ${creature.animal}
+${creature.name} had ${creature.defining_attribute}.
+${creature.name } ${  creature.assertion }, was he?
