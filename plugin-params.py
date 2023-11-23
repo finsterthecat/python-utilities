@@ -26,7 +26,7 @@ class TokenReplacer:
 
         # Apply the named transform to string c.
         # Throw AttributeError if unrecognized transform
-        def __xform(c, xform_func):
+        def xform(c, xform_func):
             funcs = {
                 None: lambda c: c,
                 'capitalize': lambda c: c.capitalize(),
@@ -43,19 +43,19 @@ class TokenReplacer:
         # throws KeyError if key not found
         # throws ValueError if terminal value is not a string
         # throws AttributeError if xform_func, if present, is not found
-        def __lookup(c, lat, xform_func):
+        def lookup(c, lat, xform_func):
             # If no more segments in key then this must be the terminal entry and so should be a string
             # Support replacement of embedded tokens in the terminal value by calling replace_tokens!
             if not lat:
                 if not isinstance(c, str):
                     raise ValueError(f"Key does not equate to a string in the config")
-                return __xform(self.__replace_tokens(c), xform_func)
+                return xform(self.__replace_tokens(c), xform_func)
             
             # More segments so look up the next one...
             car = lat.pop(0)
             # c[car] throws a KeyError if car is not found
             try:
-                return __lookup(c[car], lat, xform_func)
+                return lookup(c[car], lat, xform_func)
             except KeyError as e:
                 raise KeyError("Key is not found in config")
 
@@ -63,7 +63,7 @@ class TokenReplacer:
         try:
             lookup_lat = matchobj.group(1).strip().split('.')
             xform_func = matchobj.group(3) if len(matchobj.groups()) > 2 else None
-            return __lookup(self.config, lookup_lat, xform_func)
+            return lookup(self.config, lookup_lat, xform_func)
         except (KeyError, ValueError, AttributeError) as e:
             token = matchobj.group(0)
             self.missing_tokens.add(token)
