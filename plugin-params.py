@@ -103,8 +103,8 @@ if __name__ == "__main__":
         description='Preprocess a text file and apply substitutions for all tokens.'
         ' Send updated text to stdout.')
     parser.add_argument('input', help='the input file(s), if empty, stdin is used', nargs='*')
-    parser.add_argument('--config', help='the config file [app.json]',
-        default='app.json')
+    parser.add_argument('--config', help='the config file [config.json]',
+        default='config.json')
     args = parser.parse_args()
 
     try:
@@ -115,9 +115,9 @@ if __name__ == "__main__":
     token_replacer.process_files(args.input)
 
     #Exit with error if errors detected by token_replacer
-    if not token_replacer.is_all_good():
+    if token_replacer.missing_tokens:
         sys.stderr.write(f"Error: {len(token_replacer.missing_tokens)} missing token" +
             ("s" if len(token_replacer.missing_tokens) > 1 else "") + " found in input and/or config:\n")
         for token in token_replacer.missing_tokens:
-            sys.stderr.write((f"\t{token}\n"))
+            sys.stderr.write((f"\tTOKEN: {token}\n"))
         sys.exit("Bad tokens found in input")

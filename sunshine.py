@@ -32,7 +32,7 @@ xfilter = args.xregex
 
 sys.stderr.write(f"file is {args.input}. Filter: {filter}. Exclude filter {xfilter}.\n")
 
-csv_columns = "Sector,Last Name,First Name,Salary,Benefits,Employer,Job Title,Year".split(",")
+csv_columns = "Sector,Last Name,First Name,Salary,Benefits,Employer,JobTitle,Year".split(",")
 csv_columns += args.filter
 filtercols = {key: None for key in args.filter}
 
@@ -43,15 +43,15 @@ writer.writeheader()
 count = 0
 total = 0.0
 for row in rows:
-    if re.search(filter, row['Job Title'], re.I) and \
-            (xfilter == None or not re.search(xfilter, row['Job Title'], re.I)):
+    if re.search(filter, row['JobTitle'], re.I) and \
+            (xfilter == None or not re.search(xfilter, row['JobTitle'], re.I)):
         out_row = row
         out_row.update(filtercols)
 
         count += 1
         total += float(row["Salary"])
         for f in args.filter:
-            if re.search(f, row['Job Title'], re.I):
+            if re.search(f, row['JobTitle'], re.I):
                 out_row[f] = 'x'
         
         writer.writerow(out_row)
